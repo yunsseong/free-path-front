@@ -1,0 +1,155 @@
+"use client"
+
+import Link from "next/link"
+import { CheckCircle2, Filter, MoreHorizontal, Search, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { format } from "date-fns"
+
+// 임시 fetchReports 함수 (실제 구현 필요)
+async function fetchReports() {
+  const res = await fetch("http://localhost:8080/api/issues", { credentials: "include" })
+  if (!res.ok) throw new Error("신고 목록을 불러오지 못했습니다")
+  return res.json()
+}
+
+function parseDateString(dateString: string) {
+  if (!dateString) return null;
+  // 소수점 이하 3자리까지만 자르고, 타임존 없으면 Z 추가
+  const match = dateString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d{1,6})?$/)
+  if (match) {
+    let base = match[1]
+    let ms = match[2] ? match[2].slice(0, 4) : '' // .123
+    return new Date(base + (ms || '') + 'Z')
+  }
+  // 이미 타임존이 있으면 그대로
+  return new Date(dateString)
+}
+
+export default function ReportsPage() {
+  const [reports, setReports] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const router = useRouter()
+
+  // 이슈 삭제 함수
+  const handleDelete = async (id: number) => {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+    setDeletingId(id)
+    try {
+      const res = await fetch(`http://localhost:8080/api/issues/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error("삭제 실패")
+      setReports(reports.filter((r) => r.id !== id))
+    } catch (e: any) {
+      alert(e.message || "삭제 중 오류 발생")
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) {
+          router.push("/login")
+          throw new Error("인증 필요")
+        }
+        return fetchReports()
+      })
+      .then((res) => {
+        // res.data 배열에서 content, createdDate만 추출
+        setReports(res.data.map((item: any) => ({
+          id: item.id,
+          content: item.content,
+          createdDate: item.createdDate
+        })) || [])
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [router])
+
+  if (loading) return <div>신고 목록을 불러오는 중...</div>
+  if (error) return <div>오류: {error}</div>
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">불편 신고</h1>
+        <p className="text-muted-foreground">사용자가 제출한 접근성 문제 관리</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>모든 신고</CardTitle>
+          <CardDescription>사용자가 제출한 불편 신고 검토 및 관리</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {reports.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>불편 신고 내용이 없습니다.</CardTitle>
+              </CardHeader>
+              <CardContent>등록된 불편 신고가 없습니다.</CardContent>
+            </Card>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>신고 내용</TableHead>
+                  <TableHead>신고 일시</TableHead>
+                  <TableHead className="text-right">삭제</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reports.map((report) => (
+                  <TableRow key={report.id}>
+                    <TableCell>{report.content}</TableCell>
+                    <TableCell>{
+                      (() => {
+                        const parsed = parseDateString(report.createdDate)
+                        return report.createdDate && parsed && !isNaN(parsed.getTime())
+                          ? format(parsed, "yyyy-MM-dd HH:mm:ss")
+                          : "-"
+                      })()
+                    }</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="inline-flex items-center"
+                        onClick={() => handleDelete(report.id)}
+                        disabled={deletingId === report.id}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {deletingId === report.id ? "삭제 중..." : "삭제"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
