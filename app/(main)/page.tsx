@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getMaps } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { apiClient } from "@/lib/api-client"
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -88,7 +89,7 @@ export default function DashboardPage() {
         </Card>
       </div>
       {loading ? (
-        <div>지도를 불러오는 중...</div>
+        <LoadingSpinner />
       ) : error ? (
         <div>오류: {error}</div>
       ) : (
