@@ -50,7 +50,7 @@ function UserProfileDropdown() {
   const [user, setUser] = useState<{ email: string }>({ email: "" })
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setUser({ email: data.data?.email || "" })

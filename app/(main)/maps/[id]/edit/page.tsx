@@ -78,7 +78,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
     setLoading(true)
     setError(null)
     // 인증 체크
-    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           router.push("/login")
@@ -430,7 +430,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
     setError(null);
     try {
       const endpoint = checked ? `/api/maps/${id}/publish` : `/api/maps/${id}/unpublish`;
-      const res = await fetch(`http://localhost:8080${endpoint}`, {
+      const res = await fetch(`https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app${endpoint}`, {
         method: "POST",
         credentials: "include",
       });

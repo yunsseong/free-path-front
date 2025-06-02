@@ -24,10 +24,7 @@ export default function KakaoMap({
   const [mapCenter, setMapCenter] = useState<Coordinates>(center)
 
   // 카카오맵 API 키를 환경변수에서 불러옴
-  const apiKey =
-    typeof window === "undefined"
-      ? process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || ""
-      : localStorage.getItem("kakao-map-api-key") || process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || ""
+  const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || ""
 
   const [loading, error] = useKakaoLoader({
     appkey: apiKey,

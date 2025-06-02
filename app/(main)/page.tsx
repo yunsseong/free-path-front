@@ -15,13 +15,13 @@ export default function DashboardPage() {
   const [dash, setDash] = useState({ mapCount: 0, buildingCount: 0, pointCount: 0, issueCount: 0 })
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
       .then(res => {
         if (!res.ok) {
           router.push("/login")
           throw new Error("인증 필요")
         }
-        return fetch("http://localhost:8080/api/dash", { credentials: "include" })
+        return fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/dash", { credentials: "include" })
       })
       .then(res => res.json())
       .then(res => {

@@ -21,7 +21,7 @@ import { format } from "date-fns"
 
 // 임시 fetchReports 함수 (실제 구현 필요)
 async function fetchReports() {
-  const res = await fetch("http://localhost:8080/api/issues", { credentials: "include" })
+  const res = await fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/issues", { credentials: "include" })
   if (!res.ok) throw new Error("신고 목록을 불러오지 못했습니다")
   return res.json()
 }
@@ -51,7 +51,7 @@ export default function ReportsPage() {
     if (!confirm("정말 삭제하시겠습니까?")) return;
     setDeletingId(id)
     try {
-      const res = await fetch(`http://localhost:8080/api/issues/${id}`, {
+      const res = await fetch(`https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/issues/${id}`, {
         method: "DELETE",
         credentials: "include",
       })
@@ -67,7 +67,7 @@ export default function ReportsPage() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           router.push("/login")

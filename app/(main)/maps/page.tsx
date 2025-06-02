@@ -22,7 +22,7 @@ export default function MapsPage() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           router.push("/login")
