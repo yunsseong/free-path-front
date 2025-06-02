@@ -1,4 +1,8 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
+if (!API_BASE) {
+  throw new Error("NEXT_PUBLIC_API_BASE 환경 변수가 설정되지 않았습니다.");
+}
 
 export async function apiClient(path: string, options: RequestInit = {}) {
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
