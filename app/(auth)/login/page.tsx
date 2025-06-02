@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { apiClient } from "@/lib/api-client"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -39,15 +40,14 @@ export default function LoginPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      const res = await apiClient("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include",
       })
       console.log("로그인 시도:", email, password)
       console.log("로그인 응답:", res)
-      if (!res.ok) {
+      if (!res) {
         setError("이메일 또는 비밀번호가 올바르지 않습니다.")
         setIsLoading(false)
         return

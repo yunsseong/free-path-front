@@ -18,12 +18,12 @@ import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
+import { apiClient } from "@/lib/api-client"
 
 // 임시 fetchReports 함수 (실제 구현 필요)
 async function fetchReports() {
-  const res = await fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/issues", { credentials: "include" })
-  if (!res.ok) throw new Error("신고 목록을 불러오지 못했습니다")
-  return res.json()
+  const res = await apiClient("/api/issues")
+  return res
 }
 
 function parseDateString(dateString: string) {

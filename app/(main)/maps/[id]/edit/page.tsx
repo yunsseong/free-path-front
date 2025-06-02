@@ -28,6 +28,7 @@ import {
 } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { apiClient } from "@/lib/api-client"
 
 // BuildingData 타입 정의 추가
 interface Floor {
@@ -77,10 +78,9 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     setLoading(true)
     setError(null)
-    // 인증 체크
-    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
+    apiClient("/api/auth/me")
       .then((res) => {
-        if (!res.ok) {
+        if (!res) {
           router.push("/login")
           throw new Error("인증 필요")
         }

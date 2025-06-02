@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { apiClient } from "@/lib/api-client"
 
 /**
  * 인증 체크 커스텀 훅
@@ -14,10 +15,10 @@ export function useAuthCheck(redirectTo: string = "/login") {
   useEffect(() => {
     let ignore = false
     setIsLoading(true)
-    fetch("http://localhost:8080/api/auth/me", { credentials: "include" })
+    apiClient("/api/auth/me")
       .then(res => {
         if (!ignore) {
-          if (res.ok) {
+          if (res) {
             setIsAuthenticated(true)
           } else {
             setIsAuthenticated(false)

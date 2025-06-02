@@ -11,6 +11,7 @@ import { useEffect, useState } from "react"
 import { getMaps } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { apiClient } from "@/lib/api-client"
 
 export default function MapsPage() {
   const [maps, setMaps] = useState<any[]>([])
@@ -22,9 +23,9 @@ export default function MapsPage() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
+    apiClient("/api/auth/me")
       .then((res) => {
-        if (!res.ok) {
+        if (!res) {
           router.push("/login")
           throw new Error("인증 필요")
         }

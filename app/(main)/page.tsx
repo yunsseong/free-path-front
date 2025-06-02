@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getMaps } from "@/lib/api"
 import { Button } from "@/components/ui/button"
+import { apiClient } from "@/lib/api-client"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -15,15 +16,14 @@ export default function DashboardPage() {
   const [dash, setDash] = useState({ mapCount: 0, buildingCount: 0, pointCount: 0, issueCount: 0 })
 
   useEffect(() => {
-    fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", { credentials: "include" })
+    apiClient("/api/auth/me")
       .then(res => {
-        if (!res.ok) {
+        if (!res) {
           router.push("/login")
           throw new Error("인증 필요")
         }
-        return fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/dash", { credentials: "include" })
+        return apiClient("/api/dash")
       })
-      .then(res => res.json())
       .then(res => {
         setDash(res.data || { mapCount: 0, buildingCount: 0, pointCount: 0, issueCount: 0 })
         return getMaps()
