@@ -19,6 +19,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { apiClient } from "@/lib/api-client"
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 
 // 임시 fetchReports 함수 (실제 구현 필요)
 async function fetchReports() {
@@ -44,11 +45,11 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [deleteDialogId, setDeleteDialogId] = useState<number | null>(null)
   const router = useRouter()
 
   // 이슈 삭제 함수
   const handleDelete = async (id: number) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
     setDeletingId(id)
     try {
       const res = await fetch(`https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/issues/${id}`, {
@@ -61,6 +62,7 @@ export default function ReportsPage() {
       alert(e.message || "삭제 중 오류 발생")
     } finally {
       setDeletingId(null)
+      setDeleteDialogId(null)
     }
   }
 
@@ -136,12 +138,23 @@ export default function ReportsPage() {
                         variant="destructive"
                         size="sm"
                         className="inline-flex items-center"
-                        onClick={() => handleDelete(report.id)}
+                        onClick={() => setDeleteDialogId(report.id)}
                         disabled={deletingId === report.id}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         {deletingId === report.id ? "삭제 중..." : "삭제"}
                       </Button>
+                      <Dialog open={deleteDialogId === report.id} onOpenChange={(open) => !open && setDeleteDialogId(null)}>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
+                          </DialogHeader>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setDeleteDialogId(null)}>취소</Button>
+                            <Button variant="destructive" onClick={() => handleDelete(report.id)} disabled={deletingId === report.id}>확인</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                   </TableRow>
                 ))}
