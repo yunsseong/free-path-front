@@ -12,6 +12,7 @@ import { getMaps } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { apiClient } from "@/lib/api-client"
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
 export default function MapsPage() {
   const [maps, setMaps] = useState<any[]>([])
@@ -43,7 +44,7 @@ export default function MapsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div>지도를 불러오는 중...</div>
+  if (loading) return <LoadingSpinner text="지도를 불러오는 중입니다..." />
   if (error) return <div>오류: {error}</div>
 
   return (

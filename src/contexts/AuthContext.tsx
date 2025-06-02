@@ -1,8 +1,9 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
-interface User {
+export interface User {
   email: string
 }
 
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // 컴포넌트 마운트 시 사용자 정보 가져오기
@@ -30,6 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Failed to fetch user:", error)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -41,6 +45,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("auth-token")
     sessionStorage.clear()
     window.location.href = "/login"
+  }
+
+  if (loading) {
+    return <LoadingSpinner text="로그인 상태를 확인 중입니다..." />
   }
 
   return (

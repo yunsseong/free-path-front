@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { apiClient } from "@/lib/api-client"
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
 // 임시 fetchReports 함수 (실제 구현 필요)
 async function fetchReports() {
@@ -89,7 +90,7 @@ export default function ReportsPage() {
       .finally(() => setLoading(false))
   }, [router])
 
-  if (loading) return <div>신고 목록을 불러오는 중...</div>
+  if (loading) return <LoadingSpinner text="불편 신고를 불러오는 중입니다..." />
   if (error) return <div>오류: {error}</div>
 
   return (

@@ -5,7 +5,8 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Sidebar } from "@/components/sidebar"
 import { Toaster } from "@/components/toaster"
-import { AuthProvider } from "../src/contexts/AuthContext"
+import { AuthProvider, User } from "../src/contexts/AuthContext"
+import { useState } from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,6 +21,8 @@ export function SidebarSpacer() {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={inter.className}>
