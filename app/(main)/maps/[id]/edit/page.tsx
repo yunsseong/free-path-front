@@ -183,7 +183,13 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
         lat: coordinate.lat,
         lng: coordinate.lng,
       }
-      const data = { name: mapName, description: mapDescription, status, centralCoordinate }
+      const data = { 
+        name: mapName, 
+        description: mapDescription, 
+        status, 
+        centralCoordinate,
+        nickname: accessCode
+      }
       await updateMap(id, data)
       setStep(2)
     } catch (e: any) {
