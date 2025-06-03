@@ -214,7 +214,6 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                     disabled={disabled}
                   />
                   <FloorPlanUploader
-                    fileName={floor.fileName}
                     planeImageUrl={floor.planeImageUrl}
                     onUploaded={(fileName) => {
                       const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName } : f);
@@ -297,21 +296,19 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
 }
 
 interface FloorPlanUploaderProps {
-  fileName?: string;
   planeImageUrl?: string | null;
   onUploaded: (fileName: string) => void;
   disabled?: boolean;
 }
 
-function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: FloorPlanUploaderProps) {
+function FloorPlanUploader({ planeImageUrl, onUploaded, disabled }: FloorPlanUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
   return (
     <div className="flex items-center gap-2 w-auto">
-      {planeImageUrl && (
+      {planeImageUrl ? (
         <img
           src={planeImageUrl}
           alt="도면 미리보기"
@@ -327,7 +324,7 @@ function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: Fl
             background: '#fafafa'
           }}
         />
-      )}
+      ) : null}
       <Button
         type="button"
         variant="outline"
