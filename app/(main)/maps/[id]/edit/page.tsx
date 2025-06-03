@@ -36,6 +36,7 @@ import _ from 'lodash'
 interface Floor {
   id: string
   name: string
+  fileName?: string
 }
 
 interface BuildingData {
@@ -116,7 +117,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
             },
             floors: building.floors?.map((floor: any) => ({
               id: floor.floorId?.toString() || floor.id?.toString() || `floor-${Date.now()}`,
-              name: floor.floorLabel || floor.name || `${floor.idx || 1}층`
+              name: floor.floorLabel || floor.name || `${floor.idx || 1}층`,
+              fileName: floor.fileName || ""
             })) || [],
             accessibility: {
               wheelchair: building.wheel || false,
@@ -230,7 +232,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
         elevator: newBuilding.accessibility.elevator,
         toilet: newBuilding.accessibility.restroom,
         dots: newBuilding.accessibility.braille,
-        caution: newBuilding.caution
+        caution: newBuilding.caution,
+        floorplane: newBuilding.floors.length > 0
       }
       
       const response = await createBuilding(id, buildingData)
@@ -264,7 +267,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
           elevator: updatedBuilding.accessibility.elevator,
           toilet: updatedBuilding.accessibility.restroom,
           dots: updatedBuilding.accessibility.braille,
-          caution: updatedBuilding.caution
+          caution: updatedBuilding.caution,
+          floorplane: updatedBuilding.floors.length > 0
         }
         
         await updateBuildingAPI(id, buildingId, buildingData)
@@ -272,7 +276,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
         if (updatedBuilding.floors.length > 0) {
           const floorData = updatedBuilding.floors.map((floor, index) => ({
             floorLabel: floor.name,
-            idx: index + 1
+            idx: index + 1,
+            fileName: floor.fileName
           }))
           await updateFloors(buildingId, floorData)
         }
