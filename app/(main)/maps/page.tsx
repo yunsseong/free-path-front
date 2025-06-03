@@ -51,14 +51,14 @@ export default function MapsPage() {
   const handleDeleteMap = async () => {
     if (!selectedMapId) return;
     try {
-      await axios.delete(`/api/maps/${selectedMapId}`)
-      setMaps((prev) => prev.filter((m) => m.mapId !== selectedMapId))
-      toast({ title: "삭제 완료", description: "지도가 삭제되었습니다." })
+      await axios.delete(`/api/maps/${selectedMapId}`, { withCredentials: true });
+      setMaps((prev) => prev.filter((m) => m.mapId !== selectedMapId));
+      toast({ title: "삭제 완료", description: "지도가 삭제되었습니다." });
     } catch (e: any) {
-      toast({ title: "삭제 실패", description: e.message || "삭제 중 오류가 발생했습니다." })
+      toast({ title: "삭제 실패", description: e.message || "삭제 중 오류가 발생했습니다." });
     } finally {
-      setDeleteDialogOpen(false)
-      setSelectedMapId(null)
+      setDeleteDialogOpen(false);
+      setSelectedMapId(null);
     }
   }
 

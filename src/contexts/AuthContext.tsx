@@ -26,6 +26,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch("https://port-0-barrier-free-map-server-mbdezq0l7f20ef60.sel4.cloudtype.app/api/auth/me", {
           credentials: "include"
         })
+        if (response.status === 401) {
+          window.location.href = "/login"
+          return
+        }
         const data = await response.json()
         if (data.data?.email) {
           setUser({ email: data.data.email })
