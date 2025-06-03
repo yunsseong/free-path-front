@@ -251,15 +251,14 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
       if (!id) return
       
       try {
-        setSaving(true)
         setSaveStatus("건물 정보를 저장하는 중...")
         
         const buildingData = {
           name: updatedBuilding.name,
           number: updatedBuilding.number,
           coordinate: {
-            lat: Math.round(updatedBuilding.location.lat),
-            lng: Math.round(updatedBuilding.location.lng)
+            lat: updatedBuilding.location.lat,
+            lng: updatedBuilding.location.lng
           },
           wheel: updatedBuilding.accessibility.wheelchair,
           elevator: updatedBuilding.accessibility.elevator,
@@ -284,8 +283,6 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
         console.error('건물 수정 실패:', error)
         setError('건물 수정에 실패했습니다.')
         setSaveStatus(null)
-      } finally {
-        setSaving(false)
       }
     }, 1000),
     [id]
@@ -323,18 +320,13 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
   )
 
   const updateBuilding = async (buildingId: string, updatedBuilding: BuildingData) => {
-    try {
-      // 클라이언트 상태 즉시 업데이트  
-      setBuildings(buildings.map((building: BuildingData) => 
-        building.id === buildingId ? updatedBuilding : building
-      ))
-      
-      // 서버에 디바운스된 업데이트
-      debouncedUpdateBuilding(buildingId, updatedBuilding)
-    } catch (error) {
-      console.error('건물 수정 실패:', error)
-      setError('건물 수정에 실패했습니다.')
-    }
+    // 클라이언트 상태 즉시 업데이트  
+    setBuildings(buildings.map((building: BuildingData) => 
+      building.id === buildingId ? updatedBuilding : building
+    ))
+    
+    // 서버에 디바운스된 업데이트
+    debouncedUpdateBuilding(buildingId, updatedBuilding)
   }
 
   const removeBuilding = async (buildingId: string) => {
