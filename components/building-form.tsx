@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch"
 import KakaoMap from "@/components/kakao-map"
 import { Upload, GripVertical, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import React, { useRef } from "react"
 import { v4 as uuidv4 } from "uuid"
 import axios from "axios"
 
@@ -117,7 +116,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           id="building-name" 
           placeholder="건물 이름을 입력하세요"
           value={building.name}
-          onChange={(e) => updateBuilding({ name: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateBuilding({ name: e.target.value })}
           disabled={disabled}
         />
       </div>
@@ -127,7 +126,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           id="building-number"
           placeholder="건물 번호를 입력하세요"
           value={building.number || ""}
-          onChange={(e) => updateBuilding({ number: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateBuilding({ number: e.target.value })}
           disabled={disabled}
         />
       </div>
@@ -136,7 +135,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
         <Label>건물 위치</Label>
         <KakaoMap 
           center={building.location} 
-          onCenterChange={handleLocationChange} 
+          onCenterChange={(coordinates: { lat: number; lng: number }) => handleLocationChange(coordinates)} 
           height="300px" 
         />
         {disabled && (
@@ -151,7 +150,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
             id="latitude"
             placeholder="위도"
             value={building.location.lat.toFixed(6)}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const value = Number.parseFloat(e.target.value)
               if (!isNaN(value)) {
                 updateBuilding({ location: { ...building.location, lat: value } })
@@ -166,7 +165,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
             id="longitude"
             placeholder="경도"
             value={building.location.lng.toFixed(6)}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const value = Number.parseFloat(e.target.value)
               if (!isNaN(value)) {
                 updateBuilding({ location: { ...building.location, lng: value } })
@@ -196,8 +195,8 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                 key={floor.id} 
                 className={`p-4 border rounded-md bg-card ${disabled ? 'opacity-60' : ''}`}
                 draggable={!disabled}
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={(e) => handleDragOver(e, idx)}
+                onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, idx)}
+                onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, idx)}
                 onDragEnd={handleDragEnd}
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -205,7 +204,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                   <Input
                     placeholder="층 이름 (예: B1, 1층, 2층 등)"
                     value={floor.name}
-                    onChange={(e) => updateFloorName(floor.id, e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFloorName(floor.id, e.target.value)}
                     className="flex-1"
                     disabled={disabled}
                   />
@@ -241,7 +240,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           <Switch 
             id="wheelchair" 
             checked={building.accessibility.wheelchair}
-            onCheckedChange={(checked) => updateAccessibility('wheelchair', checked)}
+            onCheckedChange={(checked: boolean) => updateAccessibility('wheelchair', checked)}
             disabled={disabled}
           />
         </div>
@@ -251,7 +250,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           <Switch 
             id="elevator" 
             checked={building.accessibility.elevator}
-            onCheckedChange={(checked) => updateAccessibility('elevator', checked)}
+            onCheckedChange={(checked: boolean) => updateAccessibility('elevator', checked)}
             disabled={disabled}
           />
         </div>
@@ -261,7 +260,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           <Switch 
             id="restroom" 
             checked={building.accessibility.restroom}
-            onCheckedChange={(checked) => updateAccessibility('restroom', checked)}
+            onCheckedChange={(checked: boolean) => updateAccessibility('restroom', checked)}
             disabled={disabled}
           />
         </div>
@@ -271,7 +270,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           <Switch 
             id="braille" 
             checked={building.accessibility.braille}
-            onCheckedChange={(checked) => updateAccessibility('braille', checked)}
+            onCheckedChange={(checked: boolean) => updateAccessibility('braille', checked)}
             disabled={disabled}
           />
         </div>
@@ -283,7 +282,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
           id="caution" 
           placeholder="이 건물에 대한 주의사항이나 추가 정보를 입력하세요"
           value={building.caution}
-          onChange={(e) => updateBuilding({ caution: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateBuilding({ caution: e.target.value })}
           disabled={disabled}
         />
       </div>
@@ -302,6 +301,8 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -309,7 +310,7 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
     try {
       const ext = file.name.split('.').pop();
       const uuidFileName = `${uuidv4()}.${ext}`;
-      const presignedRes = await axios.post("/api/images/upload-url", {
+      const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
         fileName: uuidFileName
       });
       const uploadUrl = presignedRes.data.data.uploadUrl;

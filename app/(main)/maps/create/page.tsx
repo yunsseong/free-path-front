@@ -1,6 +1,8 @@
+/// <reference types="react" />
+
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState, useCallback } from "react"
 import Link from "next/link"
@@ -38,6 +40,7 @@ interface Floor {
 interface BuildingData {
   id: string
   name: string
+  number: string
   location: { lat: number; lng: number }
   floors: Floor[]
   accessibility: {
@@ -164,6 +167,7 @@ export default function CreateMapPage() {
     const newBuilding: BuildingData = {
       id: tempId,
       name: `새 건물 ${buildings.length + 1}`,
+      number: '',
       location: { lat: 37.5665, lng: 126.978 },
       floors: [],
       accessibility: {
@@ -178,7 +182,7 @@ export default function CreateMapPage() {
     // 타임아웃 안전장치 (10초 후 자동 해제)
     const timeoutId = setTimeout(() => {
       console.warn('건물 생성 타임아웃, 생성중 상태를 강제 해제합니다.')
-      setCreatingItems(prev => {
+      setCreatingItems((prev: Set<string>) => {
         const newSet = new Set(prev)
         newSet.delete(tempId)
         return newSet
@@ -187,10 +191,10 @@ export default function CreateMapPage() {
 
     try {
       // 생성중 상태로 표시
-      setCreatingItems(prev => new Set(prev).add(tempId))
+      setCreatingItems((prev: Set<string>) => new Set(prev).add(tempId))
       
       // 클라이언트 상태에 먼저 추가 (로딩 상태)
-      setBuildings([...buildings, newBuilding])
+      setBuildings((prev: BuildingData[]) => [...prev, newBuilding])
       
       // 서버에 건물 생성
       const buildingData = {
@@ -215,10 +219,10 @@ export default function CreateMapPage() {
       if (serverBuildingId) {
         // 서버 ID로 업데이트
         const buildingWithServerId = { ...newBuilding, id: serverBuildingId.toString() }
-        setBuildings(prev => prev.map(b => b.id === tempId ? buildingWithServerId : b))
+        setBuildings((prev: BuildingData[]) => prev.map(b => b.id === tempId ? buildingWithServerId : b))
         
         // 생성중 상태 해제
-        setCreatingItems(prev => {
+        setCreatingItems((prev: Set<string>) => {
           const newSet = new Set(prev)
           newSet.delete(tempId)
           return newSet
@@ -226,7 +230,7 @@ export default function CreateMapPage() {
       } else {
         console.warn('서버에서 유효한 buildingId를 받지 못했습니다.')
         // 서버 ID를 받지 못했어도 생성중 상태 해제
-        setCreatingItems(prev => {
+        setCreatingItems((prev: Set<string>) => {
           const newSet = new Set(prev)
           newSet.delete(tempId)
           return newSet
@@ -236,8 +240,8 @@ export default function CreateMapPage() {
       console.error('건물 생성 실패:', error)
       setError('건물 생성에 실패했습니다.')
       // 실패한 건물 제거
-      setBuildings(prev => prev.filter(b => b.id !== tempId))
-      setCreatingItems(prev => {
+      setBuildings((prev: BuildingData[]) => prev.filter(b => b.id !== tempId))
+      setCreatingItems((prev: Set<string>) => {
         const newSet = new Set(prev)
         newSet.delete(tempId)
         return newSet
@@ -250,7 +254,7 @@ export default function CreateMapPage() {
 
   const updateBuilding = async (buildingId: string, updatedBuilding: BuildingData) => {
     // 클라이언트 상태 즉시 업데이트
-    setBuildings(buildings.map(building => 
+    setBuildings((prev: BuildingData[]) => prev.map(building => 
       building.id === buildingId ? updatedBuilding : building
     ))
     
@@ -263,7 +267,7 @@ export default function CreateMapPage() {
     
     try {
       await deleteBuilding(mapId.toString(), buildingId)
-      setBuildings(buildings.filter((building) => building.id !== buildingId))
+      setBuildings((prev: BuildingData[]) => prev.filter((building) => building.id !== buildingId))
     } catch (error) {
       console.error('건물 삭제 실패:', error)
       setError('건물 삭제에 실패했습니다.')
@@ -285,7 +289,7 @@ export default function CreateMapPage() {
     // 타임아웃 안전장치 (10초 후 자동 해제)
     const timeoutId = setTimeout(() => {
       console.warn('지점 생성 타임아웃, 생성중 상태를 강제 해제합니다.')
-      setCreatingItems(prev => {
+      setCreatingItems((prev: Set<string>) => {
         const newSet = new Set(prev)
         newSet.delete(tempId)
         return newSet
@@ -294,10 +298,10 @@ export default function CreateMapPage() {
 
     try {
       // 생성중 상태로 표시
-      setCreatingItems(prev => new Set(prev).add(tempId))
+      setCreatingItems((prev: Set<string>) => new Set(prev).add(tempId))
       
       // 클라이언트 상태에 먼저 추가 (로딩 상태)
-      setPois([...pois, newPoi])
+      setPois((prev: PoiData[]) => [...prev, newPoi])
       
       // 서버에 POI 생성
       const poiData = {
@@ -318,10 +322,10 @@ export default function CreateMapPage() {
       if (serverPoiId) {
         // 서버 ID로 업데이트
         const poiWithServerId = { ...newPoi, id: serverPoiId.toString() }
-        setPois(prev => prev.map(p => p.id === tempId ? poiWithServerId : p))
+        setPois((prev: PoiData[]) => prev.map(p => p.id === tempId ? poiWithServerId : p))
         
         // 생성중 상태 해제
-        setCreatingItems(prev => {
+        setCreatingItems((prev: Set<string>) => {
           const newSet = new Set(prev)
           newSet.delete(tempId)
           return newSet
@@ -329,7 +333,7 @@ export default function CreateMapPage() {
       } else {
         console.warn('서버에서 유효한 poiId를 받지 못했습니다.')
         // 서버 ID를 받지 못했어도 생성중 상태 해제
-        setCreatingItems(prev => {
+        setCreatingItems((prev: Set<string>) => {
           const newSet = new Set(prev)
           newSet.delete(tempId)
           return newSet
@@ -339,8 +343,8 @@ export default function CreateMapPage() {
       console.error('지점 생성 실패:', error)
       setError('지점 생성에 실패했습니다.')
       // 실패한 POI 제거
-      setPois(prev => prev.filter(p => p.id !== tempId))
-      setCreatingItems(prev => {
+      setPois((prev: PoiData[]) => prev.filter(p => p.id !== tempId))
+      setCreatingItems((prev: Set<string>) => {
         const newSet = new Set(prev)
         newSet.delete(tempId)
         return newSet
@@ -353,7 +357,7 @@ export default function CreateMapPage() {
 
   const updatePoi = async (poiId: string, updatedPoi: PoiData) => {
     // 클라이언트 상태 즉시 업데이트
-    setPois(pois.map(poi => 
+    setPois((prev: PoiData[]) => prev.map(poi => 
       poi.id === poiId ? updatedPoi : poi
     ))
     
@@ -366,7 +370,7 @@ export default function CreateMapPage() {
     
     try {
       await deletePoint(mapId.toString(), poiId)
-      setPois(pois.filter((poi) => poi.id !== poiId))
+      setPois((prev: PoiData[]) => prev.filter((poi) => poi.id !== poiId))
     } catch (error) {
       console.error('POI 삭제 실패:', error)
       setError('관심 지점 삭제에 실패했습니다.')
