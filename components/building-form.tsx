@@ -213,6 +213,15 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                     className="flex-1"
                     disabled={disabled}
                   />
+                  <FloorPlanUploader
+                    fileName={floor.fileName}
+                    planeImageUrl={floor.planeImageUrl}
+                    onUploaded={(fileName) => {
+                      const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName } : f);
+                      updateBuilding({ floors: newFloors });
+                    }}
+                    disabled={disabled}
+                  />
                   <Button 
                     type="button" 
                     variant="destructive" 
@@ -223,15 +232,6 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <FloorPlanUploader
-                  fileName={floor.fileName}
-                  planeImageUrl={floor.planeImageUrl}
-                  onUploaded={(fileName) => {
-                    const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName } : f);
-                    updateBuilding({ floors: newFloors });
-                  }}
-                  disabled={disabled}
-                />
               </div>
             ))}
           </div>
@@ -357,14 +357,20 @@ function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: Fl
   };
 
   return (
-    <div className="space-y-4">
-      {previewUrl && (
-        <div className="border rounded-md p-4 bg-gray-50">
-          <img 
-            src={previewUrl} 
-            alt="도면 미리보기" 
-            className="max-h-48 w-auto object-contain mx-auto" 
-            style={{ maxWidth: '100%' }}
+    <div className="space-y-2 w-full">
+      {planeImageUrl && (
+        <div className="flex justify-center items-center border rounded-md p-2 bg-gray-50">
+          <img
+            src={planeImageUrl}
+            alt="도면 미리보기"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '240px',
+              height: 'auto',
+              width: 'auto',
+              display: 'block',
+              margin: '0 auto'
+            }}
           />
         </div>
       )}
@@ -375,12 +381,12 @@ function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: Fl
           size="sm"
           onClick={() => !disabled && fileInputRef.current?.click()}
           disabled={disabled || uploading}
-          className="flex-1"
+          className="flex-shrink-0"
         >
           <Upload className="h-4 w-4 mr-2" />
           {uploading ? "업로드 중..." : "도면 업로드"}
         </Button>
-        {previewUrl && (
+        {planeImageUrl && (
           <Button
             type="button"
             variant="destructive"
