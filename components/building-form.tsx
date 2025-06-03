@@ -306,6 +306,8 @@ function FloorPlanUploader({ planeImageUrl, onUploaded, disabled }: FloorPlanUpl
   const fileInputRef = useRef<HTMLInputElement>(null);
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
+  console.log('planeImageUrl', planeImageUrl);
+
   return (
     <div className="flex items-center gap-2 w-auto">
       {planeImageUrl ? (
