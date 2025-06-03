@@ -296,6 +296,25 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                         <span className="text-xs text-muted-foreground">드래그 또는 클릭</span>
                       </div>
                     </div>
+                    {floor.planeImageUrl && (
+                      <div className="rounded-lg shadow border bg-white flex flex-col items-center p-2 ml-2" style={{ minWidth: 110, height: 90, justifyContent: 'center' }}>
+                        <span className="text-xs text-center mb-1 text-muted-foreground">미리보기</span>
+                        <img
+                          src={floor.planeImageUrl}
+                          alt="도면 미리보기"
+                          style={{
+                            maxWidth: '100px',
+                            maxHeight: '60px',
+                            height: 'auto',
+                            width: 'auto',
+                            borderRadius: '4px',
+                            border: '1px solid #eee',
+                            background: '#fafafa',
+                            margin: 0
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
