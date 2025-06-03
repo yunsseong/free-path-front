@@ -29,6 +29,8 @@ import {
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { apiClient } from "@/lib/api-client"
+import { v4 as uuidv4 } from "uuid"
+import axios from "axios"
 
 // BuildingData 타입 정의 추가
 interface Floor {
@@ -447,6 +449,23 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
     } finally {
       setSaving(false);
     }
+  };
+
+  // 파일 업로드 및 presigned url 업로드 함수
+  const handleFileUpload = async (file: File) => {
+    const ext = file.name.split('.').pop();
+    const uuidFileName = `${uuidv4()}.${ext}`;
+    // 1. presigned URL 요청
+    const presignedRes = await axios.get("/api/images/upload-url", {
+      params: { fileName: `plans/${uuidFileName}` }
+    });
+    const uploadUrl = presignedRes.data.data.uploadUrl;
+    // 2. presigned URL로 이미지 PUT 업로드
+    await axios.put(uploadUrl, file, {
+      headers: { "Content-Type": file.type }
+    });
+    // 3. 업로드된 파일명 반환 (필요시)
+    return uuidFileName;
   };
 
   if (loading) return (

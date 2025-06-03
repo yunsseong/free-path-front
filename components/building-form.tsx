@@ -8,10 +8,14 @@ import { Switch } from "@/components/ui/switch"
 import KakaoMap from "@/components/kakao-map"
 import { Upload, GripVertical, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import React, { useRef } from "react"
+import { v4 as uuidv4 } from "uuid"
+import axios from "axios"
 
 interface Floor {
   id: string
   name: string
+  fileName?: string
 }
 
 interface BuildingData {
@@ -215,13 +219,14 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className={`flex items-center justify-center h-32 border-2 border-dashed rounded-md bg-muted ${disabled ? 'opacity-60' : ''}`}>
-                  <div className="flex flex-col items-center text-center p-4">
-                    <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-sm font-medium">층별 도면 업로드</p>
-                    <p className="text-xs text-muted-foreground">드래그 앤 드롭하거나 클릭하여 업로드</p>
-                  </div>
-                </div>
+                <FloorPlanUploader
+                  fileName={floor.fileName}
+                  onUploaded={(fileName) => {
+                    const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName } : f);
+                    updateBuilding({ floors: newFloors });
+                  }}
+                  disabled={disabled}
+                />
               </div>
             ))}
           </div>
@@ -284,4 +289,83 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
       </div>
     </div>
   )
+}
+
+interface FloorPlanUploaderProps {
+  fileName?: string;
+  onUploaded: (fileName: string) => void;
+  disabled?: boolean;
+}
+
+function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploaderProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const uuidFileName = `${uuidv4()}.${ext}`;
+      const presignedRes = await axios.get("/api/images/upload-url", {
+        params: { fileName: `plans/${uuidFileName}` }
+      });
+      const uploadUrl = presignedRes.data.data.uploadUrl;
+      await axios.put(uploadUrl, file, {
+        headers: { "Content-Type": file.type }
+      });
+      setPreviewUrl(URL.createObjectURL(file));
+      onUploaded(uuidFileName);
+    } catch (err) {
+      alert("업로드 실패");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (disabled) return;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      fileInputRef.current!.files = e.dataTransfer.files;
+      handleFileChange({ target: fileInputRef.current } as any);
+    }
+  };
+
+  React.useEffect(() => {
+    if (fileName) {
+      setPreviewUrl(`/plans/${fileName}`);
+    }
+  }, [fileName]);
+
+  return (
+    <div
+      className={`border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}
+      onClick={() => !disabled && fileInputRef.current?.click()}
+      onDrop={handleDrop}
+      onDragOver={e => e.preventDefault()}
+      style={{ minHeight: 120 }}
+    >
+      {previewUrl ? (
+        <img src={previewUrl} alt="도면 미리보기" className="max-h-24 mb-2" />
+      ) : (
+        <>
+          <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+          <p className="text-sm font-medium">층별 도면 업로드</p>
+          <p className="text-xs text-muted-foreground">드래그 앤 드롭하거나 클릭하여 업로드</p>
+        </>
+      )}
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+        disabled={disabled || uploading}
+      />
+      {uploading && <div className="text-xs text-blue-500 mt-2">업로드 중...</div>}
+    </div>
+  );
 }
