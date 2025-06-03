@@ -309,8 +309,8 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
     try {
       const ext = file.name.split('.').pop();
       const uuidFileName = `${uuidv4()}.${ext}`;
-      const presignedRes = await axios.get("/api/images/upload-url", {
-        params: { fileName: `plans/${uuidFileName}` }
+      const presignedRes = await axios.post("/api/images/upload-url", {
+        fileName: uuidFileName
       });
       const uploadUrl = presignedRes.data.data.uploadUrl;
       await axios.put(uploadUrl, file, {
