@@ -454,6 +454,7 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
     // 1. presigned URL 요청 (POST, body에 fileName만)
     const presignedRes = await apiClient("/api/images/upload-url", {
       method: "POST",
+      credentials: "include",
       body: JSON.stringify({
         fileName: uuidFileName
       })
