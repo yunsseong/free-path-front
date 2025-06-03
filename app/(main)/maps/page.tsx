@@ -1,27 +1,38 @@
 "use client"
 
+import * as React from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Copy, Edit, Eye, EyeOff, Plus, Trash2 } from "lucide-react"
+import { Edit, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { useEffect, useState } from "react"
-import { getMaps } from "@/lib/api"
-import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { getMaps } from "@/lib/api"
 import { apiClient } from "@/lib/api-client"
 import LoadingSpinner from "@/components/ui/LoadingSpinner"
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 import axios from "axios"
 
+interface MapData {
+  mapId: string | number
+  id?: string | number
+  name: string
+  description?: string
+  status: string
+  updatedDate?: string
+  frontUrl?: string
+}
+
 export default function MapsPage() {
-  const [maps, setMaps] = useState<any[]>([])
+  const [maps, setMaps] = useState<MapData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedMapId, setSelectedMapId] = useState<number | null>(null)
+  const [selectedMapId, setSelectedMapId] = useState<string | number | null>(null)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -38,9 +49,17 @@ export default function MapsPage() {
       })
       .then((res) => {
         console.log('지도 목록 API 응답:', res)
-        const mapData = res.data || []
-        console.log('지도 상태 정보:', mapData.map((map: any) => ({ id: map.mapId, name: map.name, status: map.status })))
-        setMaps(mapData)
+        const mapData = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []
+        console.log('지도 상태 정보:', mapData.map((map: any) => ({ 
+          id: map.mapId || map.id, 
+          name: map.name, 
+          status: map.status 
+        })))
+        const processedData = mapData.map((map: any) => ({
+          ...map,
+          mapId: map.mapId || map.id
+        }))
+        setMaps(processedData)
       })
       .catch((e) => {
         if (e.message !== "인증 필요") setError(e.message)
@@ -52,7 +71,7 @@ export default function MapsPage() {
     if (!selectedMapId) return;
     try {
       await axios.delete(`/api/maps/${selectedMapId}`, { withCredentials: true });
-      setMaps((prev) => prev.filter((m) => m.mapId !== selectedMapId));
+      setMaps((prev: MapData[]) => prev.filter((m: MapData) => m.mapId !== selectedMapId));
       toast({ title: "삭제 완료", description: "지도가 삭제되었습니다." });
     } catch (e: any) {
       toast({ title: "삭제 실패", description: e.message || "삭제 중 오류가 발생했습니다." });
@@ -106,20 +125,27 @@ export default function MapsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                maps.map((map) => (
+                maps.map((map: MapData) => (
                   <TableRow key={map.mapId}>
                     <TableCell className="font-medium">{map.name}</TableCell>
                     <TableCell className="hidden md:table-cell">{map.description}</TableCell>
                     <TableCell>
-                      {map.status === "DEPLOYING" ? (
-                        <Badge className="bg-green-500 hover:bg-green-600">배포됨</Badge>
-                      ) : (
-                        <Badge variant="outline">중단됨</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Badge className={map.status === "DEPLOYING" ? "bg-green-500" : "bg-gray-500"}>
+                          {map.status === "DEPLOYING" ? "배포 중" : "중지됨"}
+                        </Badge>
+                        {map.frontUrl && (
+                          <Badge variant="outline">
+                            <a href={map.frontUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                              프론트 URL
+                            </a>
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{map.updatedDate ? new Date(map.updatedDate).toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : ""}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex justify-end gap-2">
                         {map.mapId ? (
                           <Button variant="ghost" size="icon" asChild>
                             <Link href={`/maps/${map.mapId}/edit`}>
@@ -128,9 +154,9 @@ export default function MapsPage() {
                             </Link>
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="icon" disabled>
+                          <Button variant="ghost" size="icon" disabled title="편집할 수 없음">
                             <Edit className="h-4 w-4" />
-                            <span className="sr-only">편집</span>
+                            <span className="sr-only">편집 불가</span>
                           </Button>
                         )}
                         {map.status === "DEPLOYING" && (
@@ -151,7 +177,14 @@ export default function MapsPage() {
                             <span className="sr-only">URL 복사</span>
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => { setSelectedMapId(map.mapId); setDeleteDialogOpen(true); }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedMapId(map.mapId)
+                            setDeleteDialogOpen(true)
+                          }}
+                        >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">삭제</span>
                         </Button>
