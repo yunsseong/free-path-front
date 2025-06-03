@@ -224,28 +224,16 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <div className="flex flex-col items-center ml-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (!disabled) {
-                          const input = document.getElementById(`file-upload-${floor.id}`) as HTMLInputElement;
-                          input?.click();
-                        }
-                      }}
-                      disabled={disabled}
-                    >
-                      <Upload className="h-4 w-4" />
-                    </Button>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id={`file-upload-${floor.id}`}
-                      style={{ display: "none" }}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
+                  <div className="flex items-center gap-3 mt-2 ml-8">
+                    <div
+                      className="flex-1 flex items-center justify-center border-2 border-dashed rounded-lg min-h-[90px] min-w-[110px] max-w-[140px] bg-muted/30 cursor-pointer hover:border-primary transition"
+                      style={{ height: 90, width: 120 }}
+                      onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+                      onDrop={async e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (disabled) return;
+                        const file = e.dataTransfer.files?.[0];
                         if (!file) return;
                         const ext = file.name.split('.').pop();
                         const uuidFileName = `${uuidv4()}.${ext}`;
@@ -267,27 +255,47 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                           alert("업로드 실패");
                         }
                       }}
-                      disabled={disabled}
-                    />
-                    {floor.planeImageUrl && (
-                      <div className="mt-2 rounded-lg shadow border bg-white flex flex-col items-center p-2" style={{ minWidth: 110 }}>
-                        <span className="text-xs text-center mb-1 text-muted-foreground">{floor.name} 도면</span>
-                        <img
-                          src={floor.planeImageUrl}
-                          alt="도면 미리보기"
-                          style={{
-                            maxWidth: '100px',
-                            maxHeight: '80px',
-                            height: 'auto',
-                            width: 'auto',
-                            borderRadius: '4px',
-                            border: '1px solid #eee',
-                            background: '#fafafa',
-                            margin: 0
-                          }}
-                        />
+                      onClick={() => {
+                        if (disabled) return;
+                        const input = document.getElementById(`file-upload-${floor.id}`) as HTMLInputElement;
+                        input?.click();
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id={`file-upload-${floor.id}`}
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const ext = file.name.split('.').pop();
+                          const uuidFileName = `${uuidv4()}.${ext}`;
+                          const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+                          try {
+                            const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
+                              fileName: uuidFileName
+                            }, {
+                              withCredentials: true
+                            });
+                            const uploadUrl = presignedRes.data.data.uploadUrl;
+                            await axios.put(uploadUrl, file, {
+                              headers: { "Content-Type": file.type}
+                            });
+                            const r2Url = `https://pub-9bddcdc764d74fb0a6338b5aba7b97bf.r2.dev/plans/${uuidFileName}`;
+                            const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName: uuidFileName, planeImageUrl: r2Url } : f);
+                            updateBuilding({ floors: newFloors });
+                          } catch (err) {
+                            alert("업로드 실패");
+                          }
+                        }}
+                        disabled={disabled}
+                      />
+                      <div className="flex flex-col items-center justify-center w-full h-full select-none pointer-events-none">
+                        <span className="text-xs text-muted-foreground mb-1">이미지 업로드</span>
+                        <span className="text-xs text-muted-foreground">드래그 또는 클릭</span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
