@@ -37,6 +37,7 @@ interface Floor {
   id: string
   name: string
   fileName?: string
+  planeImageUrl?: string | null
 }
 
 interface BuildingData {
@@ -54,7 +55,6 @@ interface BuildingData {
   caution: string
 }
 
-// import { KakaoMapSettings } from "@/components/kakao-map-settings"
 
 export default function EditMapPage({ params }: { params: { id: string } }) {
   const id = params.id;
@@ -118,7 +118,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
             floors: building.floors?.map((floor: any) => ({
               id: floor.floorId?.toString() || floor.id?.toString() || `floor-${Date.now()}`,
               name: floor.floorLabel || floor.name || `${floor.idx || 1}층`,
-              fileName: floor.fileName || ""
+              fileName: floor.fileName || "",
+              planeImageUrl: floor.planeImageUrl || ""
             })) || [],
             accessibility: {
               wheelchair: building.wheel || false,
@@ -225,8 +226,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
         name: newBuilding.name,
         number: newBuilding.number,
         coordinate: {
-          lat: Math.round(newBuilding.location.lat),
-          lng: Math.round(newBuilding.location.lng)
+          lat: newBuilding.location.lat,
+          lng: newBuilding.location.lng
         },
         wheel: newBuilding.accessibility.wheelchair,
         elevator: newBuilding.accessibility.elevator,
@@ -277,7 +278,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
           const floorData = updatedBuilding.floors.map((floor, index) => ({
             floorLabel: floor.name,
             idx: index + 1,
-            fileName: floor.fileName
+            fileName: floor.fileName,
+            planeImageUrl: floor.planeImageUrl
           }))
           await updateFloors(buildingId, floorData)
         }
@@ -302,8 +304,8 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
         
         const poiData = {
           coordinate: {
-            lat: Math.round(updatedPoi.location.lat),
-            lng: Math.round(updatedPoi.location.lng)
+            lat: updatedPoi.location.lat,
+            lng: updatedPoi.location.lng
           },
           memo: updatedPoi.note,
           type: updatedPoi.type === "ramp" ? "ramp" : "parking"
@@ -629,6 +631,28 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
                         building={building}
                         onBuildingChange={(updatedBuilding) => updateBuilding(building.id, updatedBuilding)}
                       />
+                      {building.floors && building.floors.length > 0 && (
+                        <div className="flex flex-wrap gap-4 mt-4">
+                          {building.floors.map((floor) => (
+                            floor.planeImageUrl ? (
+                              <div key={floor.id} className="flex flex-col items-center">
+                                <span className="text-xs mb-1">{floor.name}</span>
+                                <img
+                                  src={floor.planeImageUrl}
+                                  alt={`${building.name} ${floor.name} 도면`}
+                                  style={{
+                                    maxWidth: '120px',
+                                    maxHeight: '120px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #eee',
+                                    background: '#fafafa'
+                                  }}
+                                />
+                              </div>
+                            ) : null
+                          ))}
+                        </div>
+                      )}
                       <div className="flex justify-end mt-4">
                         <Button variant="destructive" size="sm" onClick={() => removeBuilding(building.id)}>
                           <Trash2 className="mr-2 h-4 w-4" /> 건물 삭제
