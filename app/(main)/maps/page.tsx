@@ -134,13 +134,6 @@ export default function MapsPage() {
                         <Badge className={map.status === "DEPLOYING" ? "bg-green-500" : "bg-gray-500"}>
                           {map.status === "DEPLOYING" ? "배포 중" : "중지됨"}
                         </Badge>
-                        {map.frontUrl && (
-                          <Badge variant="outline">
-                            <a href={map.frontUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                              프론트 URL
-                            </a>
-                          </Badge>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{map.updatedDate ? new Date(map.updatedDate).toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : ""}</TableCell>
