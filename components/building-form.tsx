@@ -305,23 +305,21 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+  const R2_URL = process.env.NEXT_PUBLIC_R2_URL;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
-      console.log(file.name);
       const ext = file.name.split('.').pop();
       const uuidFileName = `${uuidv4()}.${ext}`;
-      console.log(uuidFileName);
       const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
         fileName: uuidFileName
       }, {
         withCredentials: true
       });
 
-      console.log(presignedRes.data.data.uploadUrl);
       const uploadUrl = presignedRes.data.data.uploadUrl;
       await axios.put(uploadUrl, file, {
         headers: { "Content-Type": file.type}
@@ -346,7 +344,7 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
 
   React.useEffect(() => {
     if (fileName) {
-      setPreviewUrl(`/plans/${fileName}`);
+      setPreviewUrl(`${R2_URL}/plans/${fileName}`);
     }
   }, [fileName]);
 
