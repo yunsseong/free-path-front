@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
-import React from "react"
-import { ArrowLeft, Building2, MapPin, Plus, Trash2, Info } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { ArrowLeft, Building2, MapPin, Plus, Trash2, Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -31,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { apiClient } from "@/lib/api-client"
 import { v4 as uuidv4 } from "uuid"
 import axios from "axios"
+import _ from 'lodash'
 
 // BuildingData 타입 정의 추가
 interface Floor {
@@ -56,7 +56,10 @@ interface BuildingData {
 // import { KakaoMapSettings } from "@/components/kakao-map-settings"
 
 export default function EditMapPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params)
+  const [id, setId] = useState<string | null>(null)
+  useEffect(() => {
+    params.then((p) => setId(p.id))
+  }, [params])
   const router = useRouter()
   
   const [step, setStep] = useState(1)
@@ -247,7 +250,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
 
   // 디바운스된 업데이트 함수들
   const debouncedUpdateBuilding = useCallback(
-    debounce(async (buildingId: string, updatedBuilding: BuildingData) => {
+    _.debounce(async (buildingId: string, updatedBuilding: BuildingData) => {
       if (!id) return
       
       try {
@@ -290,9 +293,8 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
     }, 1000),
     [id]
   )
-
   const debouncedUpdatePoi = useCallback(
-    debounce(async (poiId: string, updatedPoi: PoiData) => {
+    _.debounce(async (poiId: string, updatedPoi: PoiData) => {
       if (!id) return
       
       try {
@@ -324,19 +326,24 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
   )
 
   const updateBuilding = async (buildingId: string, updatedBuilding: BuildingData) => {
-    // 클라이언트 상태 즉시 업데이트
-    setBuildings(buildings.map(building => 
-      building.id === buildingId ? updatedBuilding : building
-    ))
-    
-    // 서버에 디바운스된 업데이트
-    debouncedUpdateBuilding(buildingId, updatedBuilding)
+    try {
+      // 클라이언트 상태 즉시 업데이트  
+      setBuildings(buildings.map((building: BuildingData) => 
+        building.id === buildingId ? updatedBuilding : building
+      ))
+      
+      // 서버에 디바운스된 업데이트
+      debouncedUpdateBuilding(buildingId, updatedBuilding)
+    } catch (error) {
+      console.error('건물 수정 실패:', error)
+      setError('건물 수정에 실패했습니다.')
+    }
   }
 
   const removeBuilding = async (buildingId: string) => {
     try {
       await deleteBuilding(id, buildingId)
-      setBuildings(buildings.filter((building) => building.id !== buildingId))
+      setBuildings(buildings.filter((building: BuildingData) => building.id !== buildingId))
     } catch (error) {
       console.error('건물 삭제 실패:', error)
       setError('건물 삭제에 실패했습니다.')
@@ -377,7 +384,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
 
   const updatePoi = async (poiId: string, updatedPoi: PoiData) => {
     // 클라이언트 상태 즉시 업데이트
-    setPois(pois.map(poi => 
+    setPois(pois.map((poi: PoiData) => 
       poi.id === poiId ? updatedPoi : poi
     ))
     
@@ -388,7 +395,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
   const removePoi = async (poiId: string) => {
     try {
       await deletePoint(id, poiId)
-      setPois(pois.filter((poi) => poi.id !== poiId))
+      setPois(pois.filter((poi: PoiData) => poi.id !== poiId))
     } catch (error) {
       console.error('POI 삭제 실패:', error)
       setError('관심 지점 삭제에 실패했습니다.')
@@ -528,18 +535,22 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
                 id="name" 
                 placeholder="지도 이름을 입력하세요" 
                 value={mapName}
-                onChange={(e) => setMapName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMapName(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="access-code">지도 접속 코드</Label>
               <Input
                 id="access-code"
-                placeholder="지도 접속 코드를 입력하세요"
+                placeholder="지도 접속 코드를 입력하세요" 
                 value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const value = e.target.value.replace(/[^a-zA-Z0-9\-]/g, '');
+                  setAccessCode(value);
+                }}
+                maxLength={50}
               />
-              <p className="text-xs text-muted-foreground mt-1">지도 접속 코드는 지도 주소 경로에 사용됩니다. 띄어쓰기 없이 입력해주세요.</p>
+              <p className="text-xs text-muted-foreground mt-1">지도 접속 코드는 지도 주소 경로에 사용됩니다. 영문, 숫자, 하이픈(-)만 사용하여 띄어쓰기 없이 입력해주세요.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">지도 설명 (선택사항)</Label>
@@ -547,7 +558,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
                 id="description" 
                 placeholder="이 지도에 대한 설명을 입력하세요" 
                 value={mapDescription}
-                onChange={(e) => setMapDescription(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMapDescription(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -564,7 +575,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
                     id="lat"
                     placeholder="위도"
                     value={coordinate.lat}
-                    onChange={(e) => handleCoordinateChange(e, "lat")}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCoordinateChange(e, "lat")}
                   />
                 </div>
                 <div>
@@ -573,7 +584,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
                     id="lng"
                     placeholder="경도"
                     value={coordinate.lng}
-                    onChange={(e) => handleCoordinateChange(e, "lng")}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCoordinateChange(e, "lng")}
                   />
                 </div>
               </div>
@@ -608,7 +619,7 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <Accordion type="multiple" className="w-full">
-                {buildings.map((building) => (
+                {buildings.map((building: BuildingData) => (
                   <AccordionItem key={building.id} value={building.id}>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center">
@@ -655,11 +666,11 @@ export default function EditMapPage({ params }: { params: Promise<{ id: string }
               <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
                 <MapPin className="h-10 w-10 text-muted-foreground/50 mb-2" />
                 <h3 className="text-lg font-medium">아직 추가된 지점이 없습니다</h3>
-                <p className="text-sm text-muted-foreground">"지점 추가" 버튼을 클릭하여 지도에 POI를 추가하세요</p>
+                <p className="text-sm text-muted-foreground">"지점 추가" 버튼을 클릭하여 지도에 지점을 추가하세요</p>
               </div>
             ) : (
               <Accordion type="multiple" className="w-full">
-                {pois.map((poi) => (
+                {pois.map((poi: PoiData) => (
                   <AccordionItem key={poi.id} value={poi.id}>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center">
