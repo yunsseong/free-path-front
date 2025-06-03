@@ -1,0 +1,37 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: aster20/barrier-free-map
+          stage: main
+          yaml: |
+            name: free-path-front
+            app: next.js
+            options:
+              nodeversion: "20"
+              env:
+                - name: NEXT_PUBLIC_API_BASE
+                  secret: NEXT_PUBLIC_API_BASE
+                - name: NEXT_PUBLIC_KAKAO_MAP_API_KEY
+                  secret: NEXT_PUBLIC_KAKAO_MAP_API_KEY
+              buildenv: []
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
