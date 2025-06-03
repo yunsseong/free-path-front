@@ -120,8 +120,8 @@ export default function MapsPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              if (map.url) {
-                                navigator.clipboard.writeText(map.url)
+                              if (map.frontUrl) {
+                                navigator.clipboard.writeText(map.frontUrl)
                                 toast({
                                   title: "URL 복사 완료",
                                   description: "지도 URL이 클립보드에 복사되었습니다.",
