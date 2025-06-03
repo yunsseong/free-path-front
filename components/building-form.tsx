@@ -204,29 +204,41 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                 onDragEnd={handleDragEnd}
                 data-index={idx}
               >
-                <div className="relative mb-3 p-2">
-                  <div className="flex items-center gap-3">
-                    <GripVertical className={`h-5 w-5 text-muted-foreground ${disabled ? 'cursor-not-allowed' : 'cursor-move'}`} />
-                    <Input
-                      placeholder="층 이름 (예: B1, 1층, 2층 등)"
-                      value={floor.name}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFloorName(floor.id, e.target.value)}
-                      className="w-20"
-                      maxLength={5}
+                <div className="relative mb-3 p-2 flex items-center gap-4">
+                  <GripVertical className={`h-5 w-5 text-muted-foreground ${disabled ? 'cursor-not-allowed' : 'cursor-move'}`} />
+                  <Input
+                    placeholder="층 이름 (예: B1, 1층, 2층 등)"
+                    value={floor.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFloorName(floor.id, e.target.value)}
+                    className="w-20"
+                    maxLength={5}
+                    disabled={disabled}
+                  />
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => removeFloor(floor.id)}
+                    disabled={disabled}
+                    className="absolute right-2 top-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <div className="flex flex-col items-center ml-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        if (!disabled) {
+                          const input = document.getElementById(`file-upload-${floor.id}`) as HTMLInputElement;
+                          input?.click();
+                        }
+                      }}
                       disabled={disabled}
-                    />
-                    <Button 
-                      type="button" 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => removeFloor(floor.id)}
-                      disabled={disabled}
-                      className="absolute right-2 top-2"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Upload className="h-4 w-4" />
                     </Button>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 ml-8">
                     <input
                       type="file"
                       accept="image/*"
@@ -257,36 +269,24 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                       }}
                       disabled={disabled}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (!disabled) {
-                          const input = document.getElementById(`file-upload-${floor.id}`) as HTMLInputElement;
-                          input?.click();
-                        }
-                      }}
-                      disabled={disabled}
-                    >
-                      <Upload className="h-4 w-4" />
-                    </Button>
                     {floor.planeImageUrl && (
-                      <img
-                        src={floor.planeImageUrl}
-                        alt="도면 미리보기"
-                        style={{
-                          maxWidth: '100px',
-                          maxHeight: '80px',
-                          height: 'auto',
-                          width: 'auto',
-                          borderRadius: '4px',
-                          border: '1px solid #eee',
-                          background: '#fafafa',
-                          marginLeft: '8px',
-                          marginRight: '4px'
-                        }}
-                      />
+                      <div className="mt-2 rounded-lg shadow border bg-white flex flex-col items-center p-2" style={{ minWidth: 110 }}>
+                        <span className="text-xs text-center mb-1 text-muted-foreground">{floor.name} 도면</span>
+                        <img
+                          src={floor.planeImageUrl}
+                          alt="도면 미리보기"
+                          style={{
+                            maxWidth: '100px',
+                            maxHeight: '80px',
+                            height: 'auto',
+                            width: 'auto',
+                            borderRadius: '4px',
+                            border: '1px solid #eee',
+                            background: '#fafafa',
+                            margin: 0
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
