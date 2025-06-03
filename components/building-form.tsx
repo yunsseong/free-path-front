@@ -311,17 +311,20 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
     if (!file) return;
     setUploading(true);
     try {
+      console.log(file.name);
       const ext = file.name.split('.').pop();
       const uuidFileName = `${uuidv4()}.${ext}`;
+      console.log(uuidFileName);
       const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
         fileName: uuidFileName
       }, {
         withCredentials: true
       });
+
+      console.log(presignedRes.data.data.uploadUrl);
       const uploadUrl = presignedRes.data.data.uploadUrl;
       await axios.put(uploadUrl, file, {
-        headers: { "Content-Type": file.type },
-        withCredentials: true
+        headers: { "Content-Type": file.type}
       });
       setPreviewUrl(URL.createObjectURL(file));
       onUploaded(uuidFileName);
