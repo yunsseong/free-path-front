@@ -55,12 +55,9 @@ interface BuildingData {
 
 // import { KakaoMapSettings } from "@/components/kakao-map-settings"
 
-export default function EditMapPage({ params }: { params: Promise<{ id: string }> }) {
-  const [id, setId] = useState<string | null>(null)
-  useEffect(() => {
-    params.then((p) => setId(p.id))
-  }, [params])
-  const router = useRouter()
+export default function EditMapPage({ params }: { params: { id: string } }) {
+  const id = params.id;
+  const router = useRouter();
   
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(true)
