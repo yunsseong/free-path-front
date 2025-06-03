@@ -17,6 +17,7 @@ interface Floor {
   id: string
   name: string
   fileName?: string
+  planeImageUrl?: string | null
 }
 
 interface BuildingData {
@@ -88,15 +89,16 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
       return
     }
     e.preventDefault()
-    if (draggedIndex === null || draggedIndex === (e.target as HTMLDivElement).dataset.index) return
+    const targetIndex = Number((e.target as HTMLDivElement).dataset.index)
+    if (draggedIndex === null || draggedIndex === targetIndex) return
     
     const newFloors = [...building.floors]
     const draggedFloor = newFloors[draggedIndex]
     newFloors.splice(draggedIndex, 1)
-    newFloors.splice(Number((e.target as HTMLDivElement).dataset.index), 0, draggedFloor)
+    newFloors.splice(targetIndex, 0, draggedFloor)
     
     updateBuilding({ floors: newFloors })
-    setDraggedIndex(Number((e.target as HTMLDivElement).dataset.index))
+    setDraggedIndex(targetIndex)
   }
 
   const handleDragEnd = () => {
@@ -223,6 +225,7 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                 </div>
                 <FloorPlanUploader
                   fileName={floor.fileName}
+                  planeImageUrl={floor.planeImageUrl}
                   onUploaded={(fileName) => {
                     const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName } : f);
                     updateBuilding({ floors: newFloors });
@@ -295,17 +298,28 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
 
 interface FloorPlanUploaderProps {
   fileName?: string;
+  planeImageUrl?: string | null;
   onUploaded: (fileName: string) => void;
   disabled?: boolean;
 }
 
-function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploaderProps) {
+function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: FloorPlanUploaderProps) {
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
   const R2_URL = process.env.NEXT_PUBLIC_R2_URL;
+
+  React.useEffect(() => {
+    if (fileName) {
+      setPreviewUrl(`${R2_URL}/plans/${fileName}`);
+    } else if (planeImageUrl) {
+      setPreviewUrl(planeImageUrl);
+    } else {
+      setPreviewUrl(undefined);
+    }
+  }, [fileName, planeImageUrl]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -342,12 +356,6 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
     }
   };
 
-  React.useEffect(() => {
-    if (fileName) {
-      setPreviewUrl(`${R2_URL}/plans/${fileName}`);
-    }
-  }, [fileName]);
-
   return (
     <div
       className={`border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}
@@ -357,7 +365,12 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
       style={{ minHeight: 120 }}
     >
       {previewUrl ? (
-        <img src={previewUrl} alt="도면 미리보기" className="max-h-24 mb-2" />
+        <img 
+          src={previewUrl} 
+          alt="도면 미리보기" 
+          className="max-h-48 w-auto object-contain mb-2" 
+          style={{ maxWidth: '100%' }}
+        />
       ) : (
         <>
           <Upload className="h-10 w-10 text-muted-foreground mb-2" />
