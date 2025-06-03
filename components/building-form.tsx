@@ -1,3 +1,5 @@
+/// <reference types="react" />
+
 "use client"
 
 import React, { useState, useRef } from "react"
@@ -80,21 +82,21 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
     e.dataTransfer.effectAllowed = "move"
   }
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     if (disabled) {
       e.preventDefault()
       return
     }
     e.preventDefault()
-    if (draggedIndex === null || draggedIndex === index) return
+    if (draggedIndex === null || draggedIndex === (e.target as HTMLDivElement).dataset.index) return
     
     const newFloors = [...building.floors]
     const draggedFloor = newFloors[draggedIndex]
     newFloors.splice(draggedIndex, 1)
-    newFloors.splice(index, 0, draggedFloor)
+    newFloors.splice(Number((e.target as HTMLDivElement).dataset.index), 0, draggedFloor)
     
     updateBuilding({ floors: newFloors })
-    setDraggedIndex(index)
+    setDraggedIndex(Number((e.target as HTMLDivElement).dataset.index))
   }
 
   const handleDragEnd = () => {
@@ -196,8 +198,9 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                 className={`p-4 border rounded-md bg-card ${disabled ? 'opacity-60' : ''}`}
                 draggable={!disabled}
                 onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, idx)}
-                onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, idx)}
+                onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e)}
                 onDragEnd={handleDragEnd}
+                data-index={idx}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <GripVertical className={`h-5 w-5 text-muted-foreground ${disabled ? 'cursor-not-allowed' : 'cursor-move'}`} />
@@ -312,6 +315,8 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
       const uuidFileName = `${uuidv4()}.${ext}`;
       const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
         fileName: uuidFileName
+      }, {
+        withCredentials: true
       });
       const uploadUrl = presignedRes.data.data.uploadUrl;
       await axios.put(uploadUrl, file, {
@@ -346,7 +351,7 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
       className={`border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}
       onClick={() => !disabled && fileInputRef.current?.click()}
       onDrop={handleDrop}
-      onDragOver={e => e.preventDefault()}
+      onDragOver={(e: React.DragEvent<HTMLDivElement>) => e.preventDefault()}
       style={{ minHeight: 120 }}
     >
       {previewUrl ? (
