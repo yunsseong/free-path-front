@@ -312,10 +312,10 @@ function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: Fl
   const R2_URL = process.env.NEXT_PUBLIC_R2_URL;
 
   React.useEffect(() => {
-    if (fileName) {
-      setPreviewUrl(`${R2_URL}/plans/${fileName}`);
-    } else if (planeImageUrl) {
+    if (planeImageUrl) {
       setPreviewUrl(planeImageUrl);
+    } else if (fileName) {
+      setPreviewUrl(`${R2_URL}/plans/${fileName}`);
     } else {
       setPreviewUrl(undefined);
     }
@@ -357,27 +357,44 @@ function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: Fl
   };
 
   return (
-    <div
-      className={`border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}
-      onClick={() => !disabled && fileInputRef.current?.click()}
-      onDrop={handleDrop}
-      onDragOver={(e: React.DragEvent<HTMLDivElement>) => e.preventDefault()}
-      style={{ minHeight: 120 }}
-    >
-      {previewUrl ? (
-        <img 
-          src={previewUrl} 
-          alt="도면 미리보기" 
-          className="max-h-48 w-auto object-contain mb-2" 
-          style={{ maxWidth: '100%' }}
-        />
-      ) : (
-        <>
-          <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-          <p className="text-sm font-medium">층별 도면 업로드</p>
-          <p className="text-xs text-muted-foreground">드래그 앤 드롭하거나 클릭하여 업로드</p>
-        </>
+    <div className="space-y-4">
+      {previewUrl && (
+        <div className="border rounded-md p-4 bg-gray-50">
+          <img 
+            src={previewUrl} 
+            alt="도면 미리보기" 
+            className="max-h-48 w-auto object-contain mx-auto" 
+            style={{ maxWidth: '100%' }}
+          />
+        </div>
       )}
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => !disabled && fileInputRef.current?.click()}
+          disabled={disabled || uploading}
+          className="flex-1"
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          {uploading ? "업로드 중..." : "도면 업로드"}
+        </Button>
+        {previewUrl && (
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setPreviewUrl(undefined);
+              onUploaded("");
+            }}
+            disabled={disabled || uploading}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       <input
         type="file"
         accept="image/*"
@@ -386,7 +403,6 @@ function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: Fl
         onChange={handleFileChange}
         disabled={disabled || uploading}
       />
-      {uploading && <div className="text-xs text-blue-500 mt-2">업로드 중...</div>}
     </div>
   );
 }
