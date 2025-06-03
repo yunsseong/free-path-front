@@ -204,32 +204,91 @@ export function BuildingForm({ building, onBuildingChange, disabled = false }: B
                 onDragEnd={handleDragEnd}
                 data-index={idx}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <GripVertical className={`h-5 w-5 text-muted-foreground ${disabled ? 'cursor-not-allowed' : 'cursor-move'}`} />
-                  <Input
-                    placeholder="층 이름 (예: B1, 1층, 2층 등)"
-                    value={floor.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFloorName(floor.id, e.target.value)}
-                    className="flex-1"
-                    disabled={disabled}
-                  />
-                  <FloorPlanUploader
-                    planeImageUrl={floor.planeImageUrl}
-                    onUploaded={(fileName) => {
-                      const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName } : f);
-                      updateBuilding({ floors: newFloors });
-                    }}
-                    disabled={disabled}
-                  />
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => removeFloor(floor.id)}
-                    disabled={disabled}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="relative mb-3 p-2">
+                  <div className="flex items-center gap-3">
+                    <GripVertical className={`h-5 w-5 text-muted-foreground ${disabled ? 'cursor-not-allowed' : 'cursor-move'}`} />
+                    <Input
+                      placeholder="층 이름 (예: B1, 1층, 2층 등)"
+                      value={floor.name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFloorName(floor.id, e.target.value)}
+                      className="w-20"
+                      maxLength={5}
+                      disabled={disabled}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => removeFloor(floor.id)}
+                      disabled={disabled}
+                      className="absolute right-2 top-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2 ml-8">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id={`file-upload-${floor.id}`}
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const ext = file.name.split('.').pop();
+                        const uuidFileName = `${uuidv4()}.${ext}`;
+                        const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+                        try {
+                          const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
+                            fileName: uuidFileName
+                          }, {
+                            withCredentials: true
+                          });
+                          const uploadUrl = presignedRes.data.data.uploadUrl;
+                          await axios.put(uploadUrl, file, {
+                            headers: { "Content-Type": file.type}
+                          });
+                          const r2Url = `https://pub-9bddcdc764d74fb0a6338b5aba7b97bf.r2.dev/plans/${uuidFileName}`;
+                          const newFloors = building.floors.map((f, i) => i === idx ? { ...f, fileName: uuidFileName, planeImageUrl: r2Url } : f);
+                          updateBuilding({ floors: newFloors });
+                        } catch (err) {
+                          alert("업로드 실패");
+                        }
+                      }}
+                      disabled={disabled}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        if (!disabled) {
+                          const input = document.getElementById(`file-upload-${floor.id}`) as HTMLInputElement;
+                          input?.click();
+                        }
+                      }}
+                      disabled={disabled}
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                    {floor.planeImageUrl && (
+                      <img
+                        src={floor.planeImageUrl}
+                        alt="도면 미리보기"
+                        style={{
+                          maxWidth: '100px',
+                          maxHeight: '80px',
+                          height: 'auto',
+                          width: 'auto',
+                          borderRadius: '4px',
+                          border: '1px solid #eee',
+                          background: '#fafafa',
+                          marginLeft: '8px',
+                          marginRight: '4px'
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
