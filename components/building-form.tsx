@@ -320,7 +320,8 @@ function FloorPlanUploader({ fileName, onUploaded, disabled }: FloorPlanUploader
       });
       const uploadUrl = presignedRes.data.data.uploadUrl;
       await axios.put(uploadUrl, file, {
-        headers: { "Content-Type": file.type }
+        headers: { "Content-Type": file.type },
+        withCredentials: true
       });
       setPreviewUrl(URL.createObjectURL(file));
       onUploaded(uuidFileName);
