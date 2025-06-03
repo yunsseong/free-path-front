@@ -459,9 +459,9 @@ export default function EditMapPage({ params }: { params: { id: string } }) {
   const handleFileUpload = async (file: File) => {
     const ext = file.name.split('.').pop();
     const uuidFileName = `${uuidv4()}.${ext}`;
-    // 1. presigned URL 요청
-    const presignedRes = await axios.get("/api/images/upload-url", {
-      params: { fileName: `plans/${uuidFileName}` }
+    // 1. presigned URL 요청 (POST, body에 fileName만)
+    const presignedRes = await axios.post("/api/images/upload-url", {
+      fileName: uuidFileName
     });
     const uploadUrl = presignedRes.data.data.uploadUrl;
     // 2. presigned URL로 이미지 PUT 업로드
