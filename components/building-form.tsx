@@ -304,109 +304,79 @@ interface FloorPlanUploaderProps {
 }
 
 function FloorPlanUploader({ fileName, planeImageUrl, onUploaded, disabled }: FloorPlanUploaderProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-  const R2_URL = process.env.NEXT_PUBLIC_R2_URL;
-
-  React.useEffect(() => {
-    if (planeImageUrl) {
-      setPreviewUrl(planeImageUrl);
-    } else if (fileName) {
-      setPreviewUrl(`${R2_URL}/plans/${fileName}`);
-    } else {
-      setPreviewUrl(undefined);
-    }
-  }, [fileName, planeImageUrl]);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const uuidFileName = `${uuidv4()}.${ext}`;
-      const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
-        fileName: uuidFileName
-      }, {
-        withCredentials: true
-      });
-
-      const uploadUrl = presignedRes.data.data.uploadUrl;
-      await axios.put(uploadUrl, file, {
-        headers: { "Content-Type": file.type}
-      });
-      setPreviewUrl(URL.createObjectURL(file));
-      onUploaded(uuidFileName);
-    } catch (err) {
-      alert("업로드 실패");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (disabled) return;
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      fileInputRef.current!.files = e.dataTransfer.files;
-      handleFileChange({ target: fileInputRef.current } as any);
-    }
-  };
 
   return (
-    <div className="space-y-2 w-full">
+    <div className="flex items-center gap-2 w-auto">
       {planeImageUrl && (
-        <div className="flex justify-center items-center border rounded-md p-2 bg-gray-50">
-          <img
-            src={planeImageUrl}
-            alt="도면 미리보기"
-            style={{
-              maxWidth: '100%',
-              maxHeight: '240px',
-              height: 'auto',
-              width: 'auto',
-              display: 'block',
-              margin: '0 auto'
-            }}
-          />
-        </div>
+        <img
+          src={planeImageUrl}
+          alt="도면 미리보기"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '200px',
+            height: 'auto',
+            width: 'auto',
+            display: 'block',
+            marginRight: '8px',
+            borderRadius: '4px',
+            border: '1px solid #eee',
+            background: '#fafafa'
+          }}
+        />
       )}
-      <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={() => !disabled && fileInputRef.current?.click()}
+        disabled={disabled || uploading}
+        className="flex-shrink-0"
+      >
+        <Upload className="h-4 w-4" />
+      </Button>
+      {planeImageUrl && (
         <Button
           type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => !disabled && fileInputRef.current?.click()}
+          variant="destructive"
+          size="icon"
+          onClick={() => onUploaded("")}
           disabled={disabled || uploading}
-          className="flex-shrink-0"
         >
-          <Upload className="h-4 w-4 mr-2" />
-          {uploading ? "업로드 중..." : "도면 업로드"}
+          <Trash2 className="h-4 w-4" />
         </Button>
-        {planeImageUrl && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => {
-              setPreviewUrl(undefined);
-              onUploaded("");
-            }}
-            disabled={disabled || uploading}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+      )}
       <input
         type="file"
         accept="image/*"
         ref={fileInputRef}
         style={{ display: "none" }}
-        onChange={handleFileChange}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          setUploading(true);
+          try {
+            const ext = file.name.split('.').pop();
+            const uuidFileName = `${uuidv4()}.${ext}`;
+            const presignedRes = await axios.post(`${API_BASE}/api/images/upload-url`, {
+              fileName: uuidFileName
+            }, {
+              withCredentials: true
+            });
+            const uploadUrl = presignedRes.data.data.uploadUrl;
+            await axios.put(uploadUrl, file, {
+              headers: { "Content-Type": file.type}
+            });
+            onUploaded(uuidFileName);
+          } catch (err) {
+            alert("업로드 실패");
+          } finally {
+            setUploading(false);
+          }
+        }}
         disabled={disabled || uploading}
       />
     </div>
